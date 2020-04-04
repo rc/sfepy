@@ -443,7 +443,7 @@ _index = """\
 %s
 
 .. toctree::
-    :maxdepth: 2
+   :maxdepth: 2
 
 """
 
@@ -515,8 +515,8 @@ def generate_rst_files(rst_dir, examples_dir, images_dir):
             docstring = get_default(import_file(ex_filename).__doc__,
                                     'missing description!')
 
-            ifd.write('    %s <%s>\n' % (os.path.basename(ebase),
-                                         rst_filename.replace('.rst', '')))
+            ifd.write('   %s <%s>\n' % (os.path.basename(ebase),
+                                        rst_filename.replace('.rst', '')))
             fig_include = ''
             for fig_filename in _get_fig_filenames(ebase, images_dir):
                 rst_fig_filename = _make_sphinx_path(fig_filename)
@@ -524,7 +524,7 @@ def generate_rst_files(rst_dir, examples_dir, images_dir):
                     fig_include += _image % rst_fig_filename + '\n'
                 else:
                     output('   warning: figure "%s" not found' % fig_filename)
- 
+
 
             # Example rst file.
             fd = open(full_rst_filename, 'w')
@@ -536,7 +536,7 @@ def generate_rst_files(rst_dir, examples_dir, images_dir):
 
         ifd.close()
 
-        mfd.write('    %s-index\n' % dirname)
+        mfd.write('   %s-index\n' % dirname)
 
     mfd.close()
 
@@ -545,27 +545,29 @@ def generate_rst_files(rst_dir, examples_dir, images_dir):
     return dir_map
 
 _rst_empty_item = """\
-      - .. 
+        - ..
 """
 
 _rst_item = """\
-    %s - .. figure:: %s
-           :target: %s
+      %s - .. figure:: %s
+             :target: %s
 
-           :ref:`%s <%s>`
+             :ref:`%s <%s>`
 """
 
 _gallery_table = """\
-.. list-table::
-    :align: center
-    :class: gallery
+   .. list-table::
+      :align: center
+      :class: gallery
 """
 
 _gallery_head = """\
-.. _gallery-index:
+.. only:: html
 
-Gallery
-=======
+   .. _gallery-index:
+
+   Gallery
+   =======
 """
 
 
@@ -591,12 +593,12 @@ def generate_gallery(examples_dir, output_filename, doc_dir,
         The number of columns in the gallery table.
     """
     output('generating %s...' % output_filename)
-        
+
     lines = [_gallery_head]
 
     for dirname, filenames in ordered_iteritems(dir_map):
-        title= ['%s' % dirname.title().replace('_', ' '),
-                len(dirname) * '^' + '',
+        title= ['   %s' % dirname.title().replace('_', ' '),
+                '   ' + len(dirname) * '^' + '',
                 _gallery_table]
 
         llines = []
