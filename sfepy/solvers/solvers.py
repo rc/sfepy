@@ -358,8 +358,13 @@ class QuadraticEVPSolver(Solver):
         Solver.__init__(self, conf=conf, mtx_m=mtx_m, mtx_d=mtx_d, mtx_k=mtx_k,
                         n_eigs=n_eigs, eigenvectors=eigenvectors,
                         status=status, context=context)
-        solver_conf = structify(conf.solver)
-        self.solver = Solver.any_from_conf(solver_conf)
+        solver_conf = self.conf.get('solver')
+        if solver_conf is not None:
+            solver_conf = structify(solver_conf)
+            self.solver = Solver.any_from_conf(solver_conf)
+
+        else:
+            self.solver = None
 
     def __call__(self, mtx_m, mtx_d, mtx_k, n_eigs=None,
                  eigenvectors=None, status=None, conf=None):
