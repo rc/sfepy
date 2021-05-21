@@ -28,6 +28,11 @@ def standard_call(call):
         eigenvectors = get_default(eigenvectors, self.eigenvectors)
         status = get_default(status, self.status)
 
+        if self.solver is None:
+            raise ValueError(
+                'no linear EVP solver given! Set self.solver manually.'
+            )
+
         result = call(self, mtx_m, mtx_d, mtx_k,
                       n_eigs, eigenvectors, status, conf,
                       **kwargs)
