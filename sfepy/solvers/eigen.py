@@ -60,8 +60,6 @@ def standard_call(call):
 class ScipyEigenvalueSolver(EigenvalueSolver):
     """
     SciPy-based solver for both dense and sparse problems.
-
-    The problem is consirered sparse if `n_eigs` argument is not None.
     """
     name = 'eig.scipy'
 
@@ -116,7 +114,10 @@ class ScipyEigenvalueSolver(EigenvalueSolver):
             eigs = out
 
         if nm.iscomplexobj(eigs):
-            ii = nm.argsort(nm.linalg.norm(eigs[:, None], axis=1))
+            fnorms = nm.full(len(eigs), nm.inf, dtype=nm.float64)
+            ifi = nm.isfinite(eigs)
+            fnorms[ifi] = nm.linalg.norm(eigs[ifi, None], axis=1)
+            ii = nm.argsort(fnorms)
 
         else:
             ii = nm.argsort(eigs)
