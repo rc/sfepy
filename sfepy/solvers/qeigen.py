@@ -126,6 +126,7 @@ class LQuadraticEVPSolver(QuadraticEVPSolver):
 
                 if conf.debug:
                     res = mtx_a.dot(vecs) - eigs * mtx_b.dot(vecs)
+                    status['lin. residuals'] = res
                     status['lin. error'] = nm.linalg.norm(res, nm.inf)
 
         else:
@@ -138,6 +139,7 @@ class LQuadraticEVPSolver(QuadraticEVPSolver):
 
                 if conf.debug:
                     res = (1.0 / eigs) * mtx_b.dot(vecs) -  mtx_a.dot(vecs)
+                    status['lin. residuals'] = res
                     status['lin. error'] = nm.linalg.norm(res, nm.inf)
 
             else:
@@ -148,6 +150,7 @@ class LQuadraticEVPSolver(QuadraticEVPSolver):
             res = ((eigs**2 * (mtx_m.dot(vecs)))
                    + (eigs * (mtx_d.dot(vecs)))
                    + (mtx_k.dot(vecs)))
+            status['residuals'] = res
             status['error'] = nm.linalg.norm(res, nm.inf)
 
         return out
