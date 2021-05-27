@@ -318,7 +318,7 @@ class SLEPcEigenvalueSolver(EigenvalueSolver):
         else:
             mtx = sps.csr_matrix(mtx)
 
-            pmtx = self.petsc.Mat()
+            pmtx = self.petsc.Mat(dtype=nm.complex128)
             pmtx.createAIJ(mtx.shape, csr=(mtx.indptr, mtx.indices, mtx.data),
                            comm=comm)
 
