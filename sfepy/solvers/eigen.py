@@ -420,7 +420,7 @@ class MatlabEigenvalueSolver(EigenvalueSolver):
             'A' : mtx_a,
             'B' : mtx_b if mtx_b is not None else 'None',
             'n_eigs' : n_eigs if n_eigs is not None else 'None',
-            'eigenvectors' : eigenvectors,
+            'eigenvectors' : bool(eigenvectors),
             'method' : conf.method,
             'balance' : conf.balance,
             'algorithm' : conf.algorithm,
