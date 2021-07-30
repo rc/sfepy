@@ -87,9 +87,9 @@ def group_chains(chain_list):
         chains.append(sorted(chain))
 
     ## print 'EPBC chain groups:', chains
-    aux = {}
-    for chain in chains:
-        aux.setdefault(len(chain), [0])[0] += 1
+    # aux = {}
+    # for chain in chains:
+    #     aux.setdefault(len(chain), [0])[0] += 1
     ## print 'EPBC chain counts:', aux
 
     return chains
