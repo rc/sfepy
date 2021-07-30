@@ -84,7 +84,7 @@ def group_chains(chain_list):
         ## print '->', chain
         ## print chain_list
 
-        chains.append(list(chain))
+        chains.append(sorted(chain))
 
     ## print 'EPBC chain groups:', chains
     aux = {}
