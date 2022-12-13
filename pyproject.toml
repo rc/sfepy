@@ -1,13 +1,12 @@
 [build-system]
 # Minimum requirements for the build system to execute.
 requires = [
-    "setuptools<60.0",
+    "setuptools>=40.8.0",
     "wheel",
-    "Cython>=0.29.30,<3.0",
-
+    "numpy",
+	"cython>=0.29.30",
     "matplotlib",
     "meshio",
-    "oldest-supported-numpy",
     "pyparsing",
     "scipy",
     "tables",
