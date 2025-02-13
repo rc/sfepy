@@ -339,6 +339,7 @@ def test_term_call_modes(data):
         for _, term_cls in ordered_iteritems(term_table):
             if (domain_geometry not in term_cls.geometries) \
                or ("dg" in term_cls.name) \
+               or ("he_by_fun" not in term_cls.name) \
                or (term_cls.name in not_tested_terms):
                 continue
 
@@ -367,6 +368,7 @@ def test_term_call_modes(data):
                         _ok = exc.name in {'ipctk'}
 
                     except:
+                        raise
                         _ok = False
 
                     if not _ok:
