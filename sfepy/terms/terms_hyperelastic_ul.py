@@ -341,8 +341,13 @@ class HyperelasticByFunULTerm(HyperElasticULBase):
     name = 'dw_ul_he_by_fun'
     family_data_names = ['mtx_f', 'det_f', 'sym_b', 'tr_b', 'in2_b',
                          'green_strain']
-    arg_types = ('material', 'virtual', 'state')
-    arg_shapes = [{'material': '1', 'virtual': ('D', 'state'), 'state': 'D'}]
+    arg_types = ('fun', 'virtual', 'state')
+    arg_shapes = [{'fun':
+                   lambda fd, mode: (nm.zeros(fd.sym_b.shape)
+                                     if mode == 'stress' else
+                                     nm.zeros(fd.sym_b.shape[:-1]
+                                              + (fd.sym_b.shape[-1],))),
+                   'virtual': ('D', 'state'), 'state': 'D'}]
 
     def get_fargs(self, mat_fun, virtual, state,
                   mode=None, term_mode=None, diff_var=None, **kwargs):
