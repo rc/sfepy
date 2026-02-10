@@ -54,9 +54,9 @@ class NeoHookeanTLTerm(HyperElasticTLBase):
 class GenYeohTLTerm(HyperElasticTLBase):
     r"""
     Hyperelastic generalized Yeoh term [1]. Effective stress
-    :math:`S_{ij} = 2 ( EM K1 (I_1 - 3)^{EM-1}
-    + PE K2 (I_1 - 3)^{PE-1}
-    + QU K3 (I_1 - 3)^{QU-1})
+    :math:`S_{ij} = 2 ( m K_1 (I_1 - 3)^{m-1}
+    + p K_2 (I_1 - 3)^{p-1}
+    + q K_3 (I_1 - 3)^{q-1})
     J^{-\frac{2}{3}}(\delta{ij} - \frac{1}{3}C_{kk}C{ij}^{-1})`.
 
     :Definition:
@@ -65,12 +65,12 @@ class GenYeohTLTerm(HyperElasticTLBase):
         \int_{\Omega} S_{ij}(\ul{u}) \delta E_{ij}(\ul{u};\ul{v})
 
     :Arguments 1:
-        - material : :math:`K1, K2, K3, EM, PE, QU`
+        - material : :math:`K_1, K_2, K_3, m, p, q`
         - virtual  : :math:`\ul{v}`
         - state    : :math:`\ul{u}`
 
     :Arguments 2:
-        - material : :math:`K1, EM` (backward compatible, sets :math:`K1=K3=0, PE=QU=1`)
+        - material : :math:`K_1, m` (backward compatible, sets :math:`K_2=K_3=0, p=q=1`)
         - virtual  : :math:`\ul{v}`
         - state    : :math:`\ul{u}`
 
@@ -101,14 +101,14 @@ class GenYeohTLTerm(HyperElasticTLBase):
             The inverse of Cauchy-Green tensor in Voigt order
             [xx, yy, zz, xy, xz, yz].
         coef : array (n_cell, n_qp, 6)
-            Material parameters [K1, K2, K3, EM, PE, QU].
+            Material parameters [K_1, K_2, K_3, m, p, q].
 
         Returns
         -------
         stress : array (n_cell, n_qp, 6)
             The second Piola-Kirchhoff stress in vector order.
         """
-        K1, K2, K3, EM, PE, QU = [coef[..., i] for i in range(6)]
+        K_1, K_2, K_3, m, p, q = [coef[..., i] for i in range(6)]
 
         bracket = i3 ** (-1. / 3.) * i1 - 3.0
 
@@ -118,11 +118,11 @@ class GenYeohTLTerm(HyperElasticTLBase):
             result = x_safe ** p
             return nm.where((x > 0.) | (p >= 0.), result, 1.)
 
-        b1 = _pow(bracket, EM - 1)
-        b2 = _pow(bracket, PE - 1)
-        b3 = _pow(bracket, QU - 1)
+        b1 = _pow(bracket, m - 1)
+        b2 = _pow(bracket, p - 1)
+        b3 = _pow(bracket, q - 1)
 
-        term = (EM * K1 * b1 + PE * K2 * b2 + QU * K3 * b3)
+        term = (m * K_1 * b1 + p * K_2 * b2 + q * K_3 * b3)
         fact = 2.0 * i3 ** (-1. / 3.) * term
 
         # Reconstruct 3x3 inverse C
@@ -154,13 +154,13 @@ class GenYeohTLTerm(HyperElasticTLBase):
         mat = HyperElasticBase.tile_mat(mat, det_f.shape[0])
 
         # Backward compatibility for the original Yeoh term (2 parameters)
-        # Old format: [K1, m] -> New format: [K1, 0, 0, m, 1, 1]
+        # Old format: [K_1, m] -> New format: [K_1, 0, 0, m, 1, 1]
         if mat.shape[-1] == 2:
             new_mat = nm.zeros(mat.shape[:-1] + (6,), dtype=mat.dtype)
-            new_mat[..., 0] = mat[..., 0]  # K1
-            new_mat[..., 3] = mat[..., 1]  # EM (m)
-            new_mat[..., 4] = 1.0  # PE (unused placeholder)
-            new_mat[..., 5] = 1.0  # QU (unused placeholder)
+            new_mat[..., 0] = mat[..., 0]  # K_1
+            new_mat[..., 3] = mat[..., 1]  # m
+            new_mat[..., 4] = 1.0  # p (unused placeholder)
+            new_mat[..., 5] = 1.0  # q (unused placeholder)
             coef = new_mat
         else:
             coef = mat[..., :6]
@@ -177,7 +177,7 @@ class GenYeohTLTerm(HyperElasticTLBase):
 
     @staticmethod
     def _get_tan_mod_yeoh(i1, i3, c_inv_v, coef):
-        K1, K2, K3, EM, PE, QU = [coef[..., i] for i in range(6)]
+        K_1, K_2, K_3, m, p, q = [coef[..., i] for i in range(6)]
         bracket = i3 ** (-1. / 3.) * i1 - 3.0
 
         # Safe power function logic consistent with original term
@@ -195,9 +195,9 @@ class GenYeohTLTerm(HyperElasticTLBase):
 
             return b_m1, b_m2
 
-        bracket_m1, bracket_m2 = _get_bracket_pow(EM)
-        bracket_p1, bracket_p2 = _get_bracket_pow(PE)
-        bracket_q1, bracket_q2 = _get_bracket_pow(QU)
+        bracket_m1, bracket_m2 = _get_bracket_pow(m)
+        bracket_p1, bracket_p2 = _get_bracket_pow(p)
+        bracket_q1, bracket_q2 = _get_bracket_pow(q)
 
         i3m13 = i3 ** (-1. / 3.)
         i3m23 = i3 ** (-2. / 3.)
@@ -220,14 +220,14 @@ class GenYeohTLTerm(HyperElasticTLBase):
             for J, (kk, ll) in enumerate(idx):
                 term = 0.
 
-                # EM term
-                term += EM * K1 * (
-                        3 * (EM - 1) * bracket_m2 * i3m23
+                # m term
+                term += m * K_1 * (
+                        3 * (m - 1) * bracket_m2 * i3m23
                         * eye3[ii, jj] * eye3[kk, ll]
-                        - ((EM - 1) * bracket_m2 * i1 * i3m23 + bracket_m1 * i3m13)
+                        - ((m - 1) * bracket_m2 * i1 * i3m23 + bracket_m1 * i3m13)
                         * (eye3[ii, jj] * c_inv[..., kk, ll]
                            + c_inv[..., ii, jj] * eye3[kk, ll])
-                        + ((EM - 1) * bracket_m2 * i1_2 * i3m23
+                        + ((m - 1) * bracket_m2 * i1_2 * i3m23
                            + bracket_m1 * i3m13 * i1) / 3.
                         * c_inv[..., ii, jj] * c_inv[..., kk, ll]
                         + 0.5 * bracket_m1 * i3m13 * i1
@@ -235,14 +235,14 @@ class GenYeohTLTerm(HyperElasticTLBase):
                            + c_inv[..., ii, ll] * c_inv[..., jj, kk])
                 )
 
-                # PE term
-                term += PE * K2 * (
-                        3 * (PE - 1) * bracket_p2 * i3m23
+                # p term
+                term += p * K_2 * (
+                        3 * (p - 1) * bracket_p2 * i3m23
                         * eye3[ii, jj] * eye3[kk, ll]
-                        - ((PE - 1) * bracket_p2 * i1 * i3m23 + bracket_p1 * i3m13)
+                        - ((p - 1) * bracket_p2 * i1 * i3m23 + bracket_p1 * i3m13)
                         * (eye3[ii, jj] * c_inv[..., kk, ll]
                            + c_inv[..., ii, jj] * eye3[kk, ll])
-                        + ((PE - 1) * bracket_p2 * i1_2 * i3m23
+                        + ((p - 1) * bracket_p2 * i1_2 * i3m23
                            + bracket_p1 * i3m13 * i1) / 3.
                         * c_inv[..., ii, jj] * c_inv[..., kk, ll]
                         + 0.5 * bracket_p1 * i3m13 * i1
@@ -250,14 +250,14 @@ class GenYeohTLTerm(HyperElasticTLBase):
                            + c_inv[..., ii, ll] * c_inv[..., jj, kk])
                 )
 
-                # QU term
-                term += QU * K3 * (
-                        3 * (QU - 1) * bracket_q2 * i3m23
+                # q term
+                term += q * K_3 * (
+                        3 * (q - 1) * bracket_q2 * i3m23
                         * eye3[ii, jj] * eye3[kk, ll]
-                        - ((QU - 1) * bracket_q2 * i1 * i3m23 + bracket_q1 * i3m13)
+                        - ((q - 1) * bracket_q2 * i1 * i3m23 + bracket_q1 * i3m13)
                         * (eye3[ii, jj] * c_inv[..., kk, ll]
                            + c_inv[..., ii, jj] * eye3[kk, ll])
-                        + ((QU - 1) * bracket_q2 * i1_2 * i3m23
+                        + ((q - 1) * bracket_q2 * i1_2 * i3m23
                            + bracket_q1 * i3m13 * i1) / 3.
                         * c_inv[..., ii, jj] * c_inv[..., kk, ll]
                         + 0.5 * bracket_q1 * i3m13 * i1
@@ -273,13 +273,13 @@ class GenYeohTLTerm(HyperElasticTLBase):
         mat = HyperElasticBase.tile_mat(mat, det_f.shape[0])
 
         # Backward compatibility for the original Yeoh term (2 parameters)
-        # Old format: [K1, m] -> New format: [K1, 0, 0, m, 1, 1]
+        # Old format: [K_1, m] -> New format: [K_1, 0, 0, m, 1, 1]
         if mat.shape[-1] == 2:
             new_mat = nm.zeros(mat.shape[:-1] + (6,), dtype=mat.dtype)
-            new_mat[..., 0] = mat[..., 0]  # K1
-            new_mat[..., 3] = mat[..., 1]  # EM (m)
-            new_mat[..., 4] = 1.0  # PE (unused placeholder)
-            new_mat[..., 5] = 1.0  # QU (unused placeholder)
+            new_mat[..., 0] = mat[..., 0]  # K_1
+            new_mat[..., 3] = mat[..., 1]  # m
+            new_mat[..., 4] = 1.0  # p (unused placeholder)
+            new_mat[..., 5] = 1.0  # q (unused placeholder)
             coef = new_mat
         else:
             coef = mat[..., :6]
