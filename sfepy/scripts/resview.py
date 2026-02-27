@@ -426,7 +426,7 @@ def pv_plot(filenames, options, plotter=None, step=None, annotations=None,
     if fstep < 0:
         return
     if hasattr(plotter, 'resview_n_steps'): # Works for None as well.
-        if fstep >= plotter.resview_n_steps:
+        if fstep >= plotter._resview_n_steps:
             return
 
     plots = {}
@@ -465,7 +465,7 @@ def pv_plot(filenames, options, plotter=None, step=None, annotations=None,
         options.grid_vector2 = [0, 0, 0]
         options.grid_vector2[ipv2] = 1.6
 
-    plotter.resview_step, plotter.resview_n_steps = fstep, n_steps
+    plotter._resview_step, plotter._resview_n_steps = fstep, n_steps
 
     fields_map = {}
     if len(options.fields_map) > 0:
@@ -1179,7 +1179,7 @@ def main():
         plotter.add_key_event(
             'Prior', lambda: pv_plot(options.filenames,
                                      options,
-                                     step=plotter.resview_step,
+                                     step=plotter._resview_step,
                                      step_inc=-1,
                                      annotations=annotations,
                                      plotter=plotter)
@@ -1187,7 +1187,7 @@ def main():
         plotter.add_key_event(
             'Next', lambda: pv_plot(options.filenames,
                                     options,
-                                    step=plotter.resview_step,
+                                    step=plotter._resview_step,
                                     step_inc=1,
                                     annotations=annotations,
                                     plotter=plotter)
