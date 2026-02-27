@@ -293,6 +293,7 @@ class Problem(Struct):
             self.setup_hooks()
 
         self.mtx_a = None
+        self.mtx_presolved = None
         self.solver = None
         self.ts = self.get_default_ts()
         self.clear_equations()
@@ -557,6 +558,7 @@ class Problem(Struct):
         Set equations of the problem to `equations`.
         """
         self.mtx_a = None
+        self.mtx_presolved = None
         self.clear_equations()
         self.equations = equations
 
@@ -1537,6 +1539,7 @@ class Problem(Struct):
             if self.is_linear():
                 mtx = prepare_matrix(self, variables) # Updates materials.
                 self.try_presolve(mtx)
+                self.mtx_presolved = mtx
 
             init_fun, prestep_fun, poststep_fun = self.get_tss_functions(
                 update_bcs=update_bcs, update_materials=update_materials,
