@@ -102,7 +102,9 @@ class Evaluator(Struct):
     def eval_tangent_matrix(self, vec, mtx=None, is_full=False,
                             select_term=None):
         if isinstance(vec, str) and vec == 'linear':
-            return get_default(mtx, self.problem.mtx_a)
+            return get_default(mtx,
+                               get_default(self.problem.mtx_presolved,
+                                           self.problem.mtx_a))
 
         if not is_full and self.problem.active_only:
             vec = self.make_full_vec(vec)
