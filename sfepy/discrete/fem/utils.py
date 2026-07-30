@@ -263,9 +263,13 @@ def extend_cell_data(data, domain, rname, val=None, is_surface=False,
     n_el = domain.shape.n_el
     if data.shape[0] == n_el: return data
 
+    ndim = data.ndim
+    nc = data.shape[2] if ndim == 4 else data.shape[1]
+
     if val is None:
-        if data.shape[2] > 1: # Vector.
+        if nc > 1: # Vector.
             val = nm.amin(nm.abs(data))
+
         else: # Scalar.
             val = nm.amin(data)
 
@@ -291,19 +295,25 @@ def extend_cell_data(data, domain, rname, val=None, is_surface=False,
         else:
             avg = 1.0
 
-        for ic in range(data.shape[2]):
+        for ic in range(nc):
+            col = data[:, ic] if ndim == 2 else data[:, 0, ic, 0]
+
             if nm.isrealobj(data):
-                evals = nm.bincount(cells, weights=data[:, 0, ic, 0],
+                evals = nm.bincount(cells, weights=col,
                                     minlength=n_el)[ucells]
 
             else:
-                evals = (nm.bincount(cells, weights=data[:, 0, ic, 0].real,
+                evals = (nm.bincount(cells, weights=col.real,
                                      minlength=n_el)[ucells]
                          + 1j *
-                         nm.bincount(cells, weights=data[:, 0, ic, 0].imag,
+                         nm.bincount(cells, weights=col.imag,
                                      minlength=n_el)[ucells])
 
-            edata[ucells, 0, ic, 0] = evals / avg
+            if ndim == 2:
+                edata[ucells, ic] = evals / avg
+
+            else:
+                edata[ucells, 0, ic, 0] = evals / avg
 
     return edata
 
