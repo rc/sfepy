@@ -8,84 +8,46 @@ from .getch import getch
 import numpy as nm
 import scipy.sparse as sp
 
+from sfepy.base.goptions import goptions
+
 real_types = [nm.float64]
 complex_types = [nm.complex128]
 
 nm.set_printoptions(threshold=100)
-
-from sfepy.base.goptions import goptions
 
 sfepy_config_dir = os.path.expanduser('~/.sfepy')
 if not os.path.exists(sfepy_config_dir):
     os.makedirs(sfepy_config_dir)
 
 
-def get_debug():
+def debug(frame=None, frames_back=1):
     """
-    Utility function providing ``debug()`` function.
-    """
-    try:
-        import IPython
-
-    except ImportError:
-        debug = None
-
-    else:
-        old_excepthook = sys.excepthook
-
-        def debug(frame=None, frames_back=1):
-            if IPython.__version__ >= '0.11':
-                from IPython.core.debugger import Pdb
-
-                try:
-                    ip = get_ipython()
-
-                except NameError:
-                    from IPython.frontend.terminal.embed \
-                         import InteractiveShellEmbed
-                    ip = InteractiveShellEmbed()
-
-                colors = ip.colors
-
-            else:
-                from IPython.Debugger import Pdb
-                from IPython.Shell import IPShell
-                from IPython import ipapi
-
-                ip = ipapi.get()
-                if ip is None:
-                    IPShell(argv=[''])
-                    ip = ipapi.get()
-
-                colors = ip.options.colors
-
-            sys.excepthook = old_excepthook
-
-            if frame is None:
-                frame = sys._getframe(frames_back)
-
-            Pdb(colors).set_trace(frame)
-
-    if debug is None:
-        import pdb
-        debug = lambda frame=None, frames_back=1: pdb.set_trace()
-
-    debug.__doc__ = """
     Start debugger on line where it is called, roughly equivalent to::
 
         import pdb; pdb.set_trace()
 
-    First, this function tries to start an `IPython`-enabled
-    debugger using the `IPython` API.
+    First, this function tries to start `ipdb`. if this fails, the plain `pdb`
+    is used instead.
 
-    When this fails, the plain old `pdb` is used instead.
-
-    With IPython, one can say in what frame the debugger can stop.
+    With ipdb, one can say in what frame the debugger can stop.
     """
+    try:
+        import ipdb
 
-    return debug
+    except ImportError:
+        import pdb
+        pdb.set_trace()
 
-debug = get_debug()
+    else:
+        if frame is None:
+            import inspect
+
+            frame = inspect.currentframe()
+            for _ in range(frames_back):
+                if frame is not None:
+                    frame = frame.f_back
+
+        ipdb.set_trace(frame)
 
 def debug_on_error():
     """
