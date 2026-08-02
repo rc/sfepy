@@ -8,12 +8,12 @@ from .getch import getch
 import numpy as nm
 import scipy.sparse as sp
 
+from sfepy.base.goptions import goptions
+
 real_types = [nm.float64]
 complex_types = [nm.complex128]
 
 nm.set_printoptions(threshold=100)
-
-from sfepy.base.goptions import goptions
 
 sfepy_config_dir = os.path.expanduser('~/.sfepy')
 if not os.path.exists(sfepy_config_dir):
