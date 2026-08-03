@@ -94,8 +94,8 @@ def define(
         'eterm': {
             'verbosity' : 0,
             'backend_args' : {
-                'backend' : 'opt_einsum',
-                'optimize' : 'auto',
+                'backend' : 'numpy',
+                'optimize' : True,
                 'layout' : None,
             },
         },
