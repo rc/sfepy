@@ -52,6 +52,52 @@ def normalize_vectors(vecs, eps=1e-8):
     ii = norms > eps
     vecs[ii] = vecs[ii] / norms[ii][:, None]
 
+def make_cross_matrices(vecs, first=True):
+    """
+    For each vector in `vecs`, make a matrix that expresses a cross product of
+    that vector with another vector.
+
+    Parameters
+    ----------
+    vecs : array
+        The array of 2 or 3 component vectors in rows.
+    first : bool
+        If True, `vecs` are the first operand of the cross product,
+        otherwise the second.
+
+    Returns
+    -------
+    mtxs : array
+        The array of matrices such that
+        `nm.einsum('cij,cj->ci', mtxs, other_vecs)`
+        computes `numpy.cross(vecs, other_vecs)` if `first` is True, and
+        `numpy.cross(other_vecs, vecs)` otherwise.
+    """
+    vecs = nm.asanyarray(vecs)
+    num, dim = vecs.shape
+
+    if dim == 3:
+        mtxs = nm.zeros((num, dim, dim), dtype=vecs.dtype)
+        mtxs[:, 0, 1] = -vecs[:, 2]
+        mtxs[:, 0, 2] = vecs[:, 1]
+        mtxs[:, 1, 0] = vecs[:, 2]
+        mtxs[:, 1, 2] = -vecs[:, 0]
+        mtxs[:, 2, 0] = -vecs[:, 1]
+        mtxs[:, 2, 1] = vecs[:, 0]
+
+    elif dim == 2:
+        mtxs = nm.zeros((num, dim), dtype=vecs.dtype)
+        mtxs[:, 0] = -vecs[:, 1]
+        mtxs[:, 1] = vecs[:, 0]
+
+    else:
+        raise ValueError(f'`vecs` can have 2 or 3 columns! (is {vecs.shape})')
+
+    if not first:
+        mtxs *= -1
+
+    return mtxs
+
 def dets_fast(a):
     """
     Fast determinant calculation of 3-dimensional array.

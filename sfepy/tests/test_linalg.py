@@ -1,7 +1,59 @@
+import numpy as nm
+
 import sfepy.base.testing as tst
 
+def cross2d(v1, v2):
+    v1 = nm.asanyarray(v1)
+    v2 = nm.asanyarray(v2)
+    return v1[..., 0] * v2[..., 1] - v1[..., 1] * v2[..., 0]
+
+def test_make_cross_matrices():
+    from sfepy.linalg import make_cross_matrices
+
+    ok = True
+
+    v1 = [[2.0, 3.0, -1.0],
+          [1.0, 6.0, -1.0],
+          [-4.0, 3.0, 3.0],
+          [4.0, 3.0, 3.0]]
+    v2 = v1[::-1]
+
+    mtxs = make_cross_matrices(v1)
+    cr = nm.einsum('cij,cj->ci', mtxs, v2)
+    ncr = nm.cross(v1, v2)
+    _ok = nm.allclose(cr, ncr, rtol=0.0, atol=1e-14)
+    tst.report('3D make_cross_matrices(v1): %s' % _ok)
+    ok = ok and _ok
+
+    mtxs = make_cross_matrices(v1, first=False)
+    cr = nm.einsum('cij,cj->ci', mtxs, v2)
+    ncr = nm.cross(v2, v1)
+    _ok = nm.allclose(cr, ncr, rtol=0.0, atol=1e-14)
+    tst.report('3D make_cross_matrices(v1, first=False): %s' % _ok)
+    ok = ok and _ok
+
+    v1 = [[2.0, 3.0],
+          [1.0, -1.0],
+          [-4.0, 3.0]]
+    v2 = v1[::-1]
+
+    mtxs = make_cross_matrices(v1)
+    cr = nm.einsum('cj,cj->c', mtxs, v2)
+    ncr = cross2d(v1, v2)
+    _ok = nm.allclose(cr, ncr, rtol=0.0, atol=1e-14)
+    tst.report('2D make_cross_matrices(v1): %s' % _ok)
+    ok = ok and _ok
+
+    mtxs = make_cross_matrices(v1, first=False)
+    cr = nm.einsum('cj,cj->c', mtxs, v2)
+    ncr = cross2d(v2, v1)
+    _ok = nm.allclose(cr, ncr, rtol=0.0, atol=1e-14)
+    tst.report('2D make_cross_matrices(v1, first=False): %s' % _ok)
+    ok = ok and _ok
+
+    assert ok
+
 def test_tensors():
-    import numpy as nm
     from sfepy.linalg import dot_sequences, insert_strided_axis
 
     ok = True
@@ -40,7 +92,6 @@ def test_tensors():
     assert ok
 
 def test_unique_rows():
-    import numpy as nm
     from sfepy.linalg import unique_rows
 
     a = nm.arange(1, 10).reshape(3, 3)
@@ -53,7 +104,6 @@ def test_unique_rows():
     assert ok
 
 def test_assemble1d():
-    import numpy as nm
     from sfepy.linalg import assemble1d
 
     a = nm.arange(5)
@@ -66,7 +116,6 @@ def test_assemble1d():
     assert ok
 
 def test_geometry():
-    import numpy as nm
     from sfepy.linalg import get_face_areas
 
     a1 = get_face_areas([[0, 1, 2, 3]],
@@ -79,7 +128,6 @@ def test_geometry():
     assert ok
 
 def test_get_blocks_stats():
-    import numpy as nm
     from sfepy.linalg.utils import get_blocks_stats
 
     A = nm.eye(3)
