@@ -619,6 +619,25 @@ class Region(Struct):
 
         return out
 
+    def get_entity_indices(self, entities, edim):
+        """
+        Return indices of `entities` of topological dimension `edim` in
+        the region entities of the same dimension.
+
+        Raises ValueError if all `entities` are not in the region entities.
+        """
+        fentities = self.entities[edim]
+
+        iin = nm.isin(entities, fentities)
+        if not iin.all():
+            raise ValueError(f'some entities are not in region {self.name}'
+                             f' entities of dimension {edim}!')
+
+        iis = nm.searchsorted(fentities, entities)
+        assert_((fentities[iis[iin]] == entities[iin]).all())
+
+        return iis
+
     def get_cell_indices(self, cells, true_cells_only=True):
         """
         Return indices of `cells` in the region cells.
@@ -638,8 +657,7 @@ class Region(Struct):
         iis = nm.searchsorted(fcells, cells)
         assert_((fcells[iis[iin]] == cells[iin]).all())
 
-        ii = nm.where(iin, iis, -1)
-        return ii
+        return iis
 
     def get_facet_indices(self):
         """
