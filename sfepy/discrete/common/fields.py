@@ -144,8 +144,6 @@ class Field(Struct):
         else:
             poly_space_basis = conf.get('poly_space_basis', 'lagrange')
 
-        key = space + '_' + poly_space_basis
-
         approx_order = parse_approx_order(conf.approx_order)
         ao, force_bubble, discontinuous = approx_order
         if poly_space_basis == 'constant':
@@ -153,26 +151,22 @@ class Field(Struct):
 
         region = regions[conf.region]
 
-        if region.kind == 'cell':
-            # Volume fields.
-            kind = 'volume'
-
-            if discontinuous:
-                cls = table[kind + '_' + key + '_discontinuous']
-
-            else:
-                cls = table[kind + '_' + key]
-
-            obj = cls(conf.name, conf.dtype, conf.shape, region,
-                      approx_order=approx_order[:2])
+        kind = 'volume' if region.kind == 'cell' else 'surface'
+        if (discontinuous and
+            (space == 'H1') and (poly_space_basis == 'lagrange')):
+            key = 'L2_piecewise'
 
         else:
-            # Surface fields.
-            kind = 'surface'
+            key = space + '_' + poly_space_basis
 
+        if discontinuous:
+            cls = table[kind + '_' + key + '_discontinuous']
+
+        else:
             cls = table[kind + '_' + key]
-            obj = cls(conf.name, conf.dtype, conf.shape, region,
-                      approx_order=approx_order[:2])
+
+        obj = cls(conf.name, conf.dtype, conf.shape, region,
+                  approx_order=approx_order[:2])
 
         return obj
 
