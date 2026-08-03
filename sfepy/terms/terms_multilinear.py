@@ -731,6 +731,12 @@ class ETermBase(Term):
     def _eval(self, out, shape, fargs, mode='eval', term_mode=None,
               diff_var=None, **kwargs):
         status = self.function(out, *fargs)
+        if hasattr(self, 'debug'):
+            output(self.name, self.arg_names)
+            output(shape, mode, term_mode, diff_var)
+            self.print_expressions(diff_var=diff_var)
+            from sfepy.base.base import debug; debug()
+
         if mode == 'eval':
             # Sum over elements but not over components.
             out1 = nm.sum(out, 0).squeeze()
