@@ -1,8 +1,9 @@
 import numpy as nm
 
-from sfepy.base.base import Struct
+from sfepy.base.base import assert_, Struct
 from sfepy.discrete.common.fields import parse_shape, Field
 from sfepy.discrete import PolySpace
+from sfepy.discrete.fem.utils import prepare_remap
 from sfepy.discrete.fem.mappings import FEMapping
 from sfepy.discrete.fem.fields_base import (
     _find_geometry, _get_sgeom_poly_space, FEField,
@@ -101,6 +102,119 @@ class L2Mixin(Struct):
             out = (out, mapping)
 
         return out
+
+class L2DiscontinuousVolumeField(L2Mixin, FEField):
+    """
+    The L2 piecewise constant (in each cell) approximation.
+    """
+    family_name = 'volume_L2_piecewise_discontinuous'
+
+    def __init__(self, name, dtype, shape, region, approx_order=0):
+        """
+        Create a discontinous L2 field (constant per cell).
+
+        Parameters
+        ----------
+        name : str
+            The field name.
+        dtype : numpy.dtype
+            The field data type: float64 or complex128.
+        shape : int/tuple/str
+            The field shape: 1 or (1,) or 'scalar', space dimension (2, or (2,)
+            or 3 or (3,)) or 'vector', or a tuple. The field shape determines
+            the shape of the FE base functions and is related to the number of
+            components of variables and to the DOF per node count, depending
+            on the field kind.
+        region : Region
+            The region where the field is defined.
+        approx_order : int or tuple
+            The FE approximation order. Ignored here.
+        """
+        field_dim = region.field_dim if hasattr(region, 'field_dim')\
+            else region.domain.shape.dim
+        shape = parse_shape(shape, field_dim)
+        Struct.__init__(self, name=name, dtype=dtype, shape=shape,
+                        region=region, approx_order=0)
+        self.domain = self.region.domain
+        self.cmesh = self.region.cmesh
+
+        self.gel, self.is_surface = _find_geometry(self.region)
+        gkey = self.gel.get_interpolation_name()
+        self.geom_poly_space = self.domain.geom_poly_spaces[gkey]
+        if not self.is_surface:
+            self.sgeom_poly_space = _get_sgeom_poly_space(self.domain, self.gel)
+
+        self._setup_kind()
+        self._create_interpolant()
+
+        cells = self.region.get_cells(true_cells_only=False)
+
+        self.dof_cells = self.region.facets if self.is_surface else cells
+        self.dof_remap = prepare_remap(self.dof_cells,
+                                       self.cmesh.num[self.region.kind_tdim])
+        n_nod = len(self.dof_cells)
+        self.econn = nm.arange(n_nod, dtype=nm.int32).reshape((-1, 1))
+
+        self.domain = self.region.domain
+
+        self.n_components = int(nm.prod(self.shape))
+        self.val_shape = self.shape
+        self.n_nod = n_nod
+
+        cc = self.cmesh.get_centroids(self.region.kind_tdim)
+        self.coors = cc[self.dof_cells]
+
+        self.extra_data = {}
+        self.mappings = {}
+        self.ori = None
+        self.basis_transform = None
+        self.clear_qp_basis()
+
+    def get_econn(self, conn_type, region, trace_region=None, local=False):
+        """
+        Get extended connectivity of the given type in the given region.
+
+        Parameters
+        ----------
+        conn_type: tuple or string
+            DOF connectivity type, ignored.
+        region: sfepy.discrete.common.region.Region
+            The region for which the connectivity is required.
+        trace_region: None or string
+            Ignored.piecewise_discontinuous
+        local: bool
+            Ignored.
+
+        Returns
+        -------
+        econn: numpy.ndarray
+            The extended connectivity array.
+        """
+        if region.name == self.region.name:
+            conn = self.econn
+
+        else:
+            assert_(region.kind_tdim == self.region.kind_tdim)
+
+            rents = region.entities[region.kind_tdim]
+            ii = self.region.get_entity_indices(rents, region.kind_tdim)
+            conn = self.econn[ii]
+
+        return conn
+
+
+    def get_dofs_in_region(self, region, merge=True):
+        """
+        Return indices of DOFs that belong to the given region.
+        """
+        rcells = region.facets if self.is_surface else region.cells
+        cells = self.dof_remap[rcells]
+        dofs = self.econn[cells, 0]
+
+        return dofs
+
+class L2DiscontinuousSurfaceField(L2DiscontinuousVolumeField):
+    family_name = 'surface_L2_piecewise_discontinuous'
 
 class L2ConstantVolumeField(L2Mixin, Field):
     """
