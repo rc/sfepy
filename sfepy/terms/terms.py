@@ -3,7 +3,7 @@ from copy import copy
 
 import numpy as nm
 
-from sfepy.base.base import (as_float_or_complex, get_default, assert_,
+from sfepy.base.base import (as_float_or_complex, get_default, assert_, output,
                              Container, Struct, goptions)
 from sfepy.base.compat import in1d
 
@@ -1375,15 +1375,20 @@ class Term(Struct):
                   diff_var=None, **kwargs):
         out = nm.empty(shape, dtype=nm.float64)
 
+        status = self.call_function(out, fargs)
+
+        if hasattr(self, 'debug'):
+            output(self.name, self.arg_names)
+            output(shape, mode, term_mode, diff_var)
+            from sfepy.base.base import debug
+            debug()
+
         if mode == 'eval':
-            status = self.call_function(out, fargs)
             # Sum over elements but not over components.
             out1 = nm.sum(out, 0).squeeze()
             return out1, status
 
         else:
-            status = self.call_function(out, fargs)
-
             return out, status
 
     def eval_complex(self, shape, fargs, mode='eval', term_mode=None,
@@ -1393,6 +1398,12 @@ class Term(Struct):
         fargsd = split_complex_args(fargs)
 
         rstatus = self.call_function(rout, fargsd['r'])
+
+        if hasattr(self, 'debug'):
+            output(self.name, self.arg_names)
+            output(shape, mode, term_mode, diff_var)
+            from sfepy.base.base import debug
+            debug()
 
         if len(fargsd) >= 2:
             iout = nm.empty(shape, dtype=nm.float64)
@@ -1598,6 +1609,12 @@ class Term(Struct):
         rname = self.region.name
         extra = None
         rdct = self.get_dof_conn_type(vvar.name)
+
+        if hasattr(self, 'debug') and (self.debug > 1):
+            output(self.name, self.arg_names)
+            output(mode, diff_var)
+            from sfepy.base.base import debug
+            debug()
 
         if mode == 'vector':
             if asm_obj.dtype == nm.float64:
