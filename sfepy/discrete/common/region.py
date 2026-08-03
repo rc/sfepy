@@ -638,8 +638,7 @@ class Region(Struct):
         iis = nm.searchsorted(fcells, cells)
         assert_((fcells[iis[iin]] == cells[iin]).all())
 
-        ii = nm.where(iin, iis, -1)
-        return ii
+        return iis
 
     def get_facet_indices(self):
         """
