@@ -1,7 +1,8 @@
+import numpy as nm
+
 import sfepy.base.testing as tst
 
 def test_tensors():
-    import numpy as nm
     from sfepy.linalg import dot_sequences, insert_strided_axis
 
     ok = True
@@ -40,7 +41,6 @@ def test_tensors():
     assert ok
 
 def test_unique_rows():
-    import numpy as nm
     from sfepy.linalg import unique_rows
 
     a = nm.arange(1, 10).reshape(3, 3)
@@ -53,7 +53,6 @@ def test_unique_rows():
     assert ok
 
 def test_assemble1d():
-    import numpy as nm
     from sfepy.linalg import assemble1d
 
     a = nm.arange(5)
@@ -66,7 +65,6 @@ def test_assemble1d():
     assert ok
 
 def test_geometry():
-    import numpy as nm
     from sfepy.linalg import get_face_areas
 
     a1 = get_face_areas([[0, 1, 2, 3]],
@@ -79,7 +77,6 @@ def test_geometry():
     assert ok
 
 def test_get_blocks_stats():
-    import numpy as nm
     from sfepy.linalg.utils import get_blocks_stats
 
     A = nm.eye(3)
