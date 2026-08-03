@@ -822,8 +822,9 @@ class FEField(Field):
             new_dofs[indx] = dofs[:indx.size]
 
         else:
-            new_dofs = extend_cell_data(dofs, self.domain, self.region,
-                                        val=fill_value)
+            new_dofs = extend_cell_data(dofs, self.domain, self.region.name,
+                                        val=fill_value,
+                                        is_surface=self.is_surface)
 
         return new_dofs
 
