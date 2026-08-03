@@ -9,7 +9,100 @@ from sfepy.discrete.fem.fields_base import (
 )
 from sfepy.discrete.fem.meshio import convert_complex_output
 
-class L2ConstantVolumeField(Field):
+class L2Mixin(Struct):
+    """
+    Common functionality for L2 fields.
+    """
+
+    def _create_interpolant(self):
+        name = '%s_%s_%s_%d' % (self.gel.name, self.space,
+                                self.poly_space_basis, self.approx_order)
+        ps = PolySpace.any_from_args(name, self.gel, self.approx_order,
+                                     basis='lagrange')
+        self.poly_space = ps
+
+    def setup_extra_data(self, info):
+        pass
+
+    def get_data_shape(self, integral, integration='cell', region_name=None):
+        """
+        Get element data dimensions.
+
+        Parameters
+        ----------
+        integral : Integral instance
+            The integral describing used numerical quadrature.
+        integration : 'cell'
+            The term integration type. Ignored.
+        region_name : str
+            The name of the region of the integral.
+
+        Returns
+        -------
+        data_shape : 4 ints
+            The `(n_el, n_qp, dim, n_en)` for volume shape kind,
+            `(n_fa, n_qp, dim, n_fn)` for surface shape kind.
+
+        Notes
+        -----
+        - `n_el`, `n_fa` = number of elements/facets
+        - `n_qp` = number of quadrature points per element/facet
+        - `dim` = spatial dimension
+        - `n_en`, `n_fn` = number of element/facet nodes
+        - `n_nod` = number of element nodes
+        """
+        if integration not in ('cell', 'facet', 'facet_extra'):
+            raise NotImplementedError('unsupported integration type! (%s)'
+                                      % integration)
+
+        region = self.domain.regions[region_name]
+        n_cell = len(region.entities[region.kind_tdim])
+        _, weights = integral.get_qp(self.gel.name)
+        n_qp = weights.shape[0]
+        dim = region.field_dim if hasattr(region, 'field_dim') else region.dim
+        return (n_cell, n_qp, dim, 1)
+
+    def create_mapping(self, region, integral, integration,
+                       return_mapping=True):
+        domain = self.domain
+        coors = domain.get_mesh_coors(actual=True)
+        iels = region.get_cells(true_cells_only=(region.kind == 'cell'))
+
+        if integration == 'cell':
+            ps = self.poly_space
+            geo_ps = self.geom_poly_space
+            dconn = domain.get_conn(tdim=region.tdim, cells=iels)
+            qp_coors, qp_weights = integral.get_qp(self.gel.name)
+            bf = ps.eval_basis(qp_coors)
+
+        elif integration in ('facet', 'facet_extra'):
+            if self.is_surface:
+                gel = self.gel
+                ps = self.poly_space
+                geo_ps = self.geom_poly_space
+
+            else:
+                gel = self.gel.surface_facet
+                geo_ps = self.sgeom_poly_space
+                ps = PolySpace.any_from_args('aux', gel, self.approx_order,
+                                             basis='lagrange')
+
+            domain.create_surface_group(region)
+            sd = domain.surface_groups[region.name]
+            dconn = sd.get_connectivity()
+            qp_coors, qp_weights = integral.get_qp(gel.name)
+            bf = ps.eval_basis(qp_coors)
+
+        mapping = FEMapping(coors, dconn, poly_space=geo_ps)
+        out = mapping.get_mapping(qp_coors, qp_weights, bf, poly_space=ps,
+                                  is_face=self.is_surface)
+
+        if return_mapping:
+            out = (out, mapping)
+
+        return out
+
+class L2ConstantVolumeField(L2Mixin, Field):
     """
     The L2 constant-in-a-region approximation.
     """
@@ -65,16 +158,6 @@ class L2ConstantVolumeField(Field):
         self.extra_data = {}
         self.mappings = {}
 
-    def _create_interpolant(self):
-        name = '%s_%s_%s_%d' % (self.gel.name, self.space,
-                                self.poly_space_basis, self.approx_order)
-        ps = PolySpace.any_from_args(name, self.gel, self.approx_order,
-                                     basis='lagrange')
-        self.poly_space = ps
-
-    def setup_extra_data(self, info):
-        pass
-
     def get_coor(self, nods=None):
         """
         Returns the barycenter of the field region.
@@ -118,44 +201,6 @@ class L2ConstantVolumeField(Field):
 
         return conn
 
-    def get_data_shape(self, integral, integration='cell', region_name=None):
-        """
-        Get element data dimensions.
-
-        Parameters
-        ----------
-        integral : Integral instance
-            The integral describing used numerical quadrature.
-        integration : 'cell'
-            The term integration type. Ignored.
-        region_name : str
-            The name of the region of the integral.
-
-        Returns
-        -------
-        data_shape : 4 ints
-            The `(n_el, n_qp, dim, n_en)` for volume shape kind,
-            `(n_fa, n_qp, dim, n_fn)` for surface shape kind.
-
-        Notes
-        -----
-        - `n_el`, `n_fa` = number of elements/facets
-        - `n_qp` = number of quadrature points per element/facet
-        - `dim` = spatial dimension
-        - `n_en`, `n_fn` = number of element/facet nodes
-        - `n_nod` = number of element nodes
-        """
-        if integration not in ('cell', 'facet', 'facet_extra'):
-            raise NotImplementedError('unsupported integration type! (%s)'
-                                      % integration)
-
-        region = self.domain.regions[region_name]
-        n_cell = len(region.entities[region.kind_tdim])
-        _, weights = integral.get_qp(self.gel.name)
-        n_qp = weights.shape[0]
-        dim = region.field_dim if hasattr(region, 'field_dim') else region.dim
-        return (n_cell, n_qp, dim, 1)
-
     def get_dofs_in_region(self, region, merge=True):
         """
         Return indices of DOFs that belong to the given region.
@@ -176,46 +221,6 @@ class L2ConstantVolumeField(Field):
 
         else:
             return bf, qp_weights
-
-    def create_mapping(self, region, integral, integration,
-                       return_mapping=True):
-        domain = self.domain
-        coors = domain.get_mesh_coors(actual=True)
-        iels = region.get_cells(true_cells_only=(region.kind == 'cell'))
-
-        if integration == 'cell':
-            ps = self.poly_space
-            geo_ps = self.geom_poly_space
-            dconn = domain.get_conn(tdim=region.tdim, cells=iels)
-            qp_coors, qp_weights = integral.get_qp(self.gel.name)
-            bf = ps.eval_basis(qp_coors)
-
-        elif integration in ('facet', 'facet_extra'):
-            if self.is_surface:
-                gel = self.gel
-                ps = self.poly_space
-                geo_ps = self.geom_poly_space
-
-            else:
-                gel = self.gel.surface_facet
-                geo_ps = self.sgeom_poly_space
-                ps = PolySpace.any_from_args('aux', gel, self.approx_order,
-                                             basis='lagrange')
-
-            domain.create_surface_group(region)
-            sd = domain.surface_groups[region.name]
-            dconn = sd.get_connectivity()
-            qp_coors, qp_weights = integral.get_qp(gel.name)
-            bf = ps.eval_basis(qp_coors)
-
-        mapping = FEMapping(coors, dconn, poly_space=geo_ps)
-        out = mapping.get_mapping(qp_coors, qp_weights, bf, poly_space=ps,
-                                  is_face=self.is_surface)
-
-        if return_mapping:
-            out = (out, mapping)
-
-        return out
 
     def create_output(self, dofs, var_name, dof_names=None,
                       key=None, extend=True, fill_value=None,
