@@ -533,6 +533,17 @@ custom = {
                                 0,1,0],
         },
     },
+    'linear_elasticity/rigid_lagrange.py': {
+        '': {
+            'fields': ['u:wu:f10:p0', '1:vw:wu:f10:p0', '1:vw:p0',
+                       'lam:wu:f10:p1', '1:vw:wu:f10:p1', '1:vw:p1',
+                       ],
+            'camera_position': [-0.441604,-4.33053,1.15129,
+                                0.918291,-0.123772,-0.0621946,
+                                0.233418,0.199095,0.951776],
+            'grid_vector1': [1.6, 0, 0],
+        },
+    },
     'linear_elasticity/rigid_twist.py': {
         '': {
             'fields': ['u:wu:f1:p0', '1:vw:wu:f1:p0', '1:vw:p0'],
