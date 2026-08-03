@@ -99,7 +99,9 @@ def eval_nodal_coors(coors, mesh_coors, region, poly_space, geom_poly_space,
     ##
     # Evaluate extra coordinates with 'bf'.
     cmesh = region.cmesh
-    conn = cmesh.get_incident(0, region.cells, region.tdim)
+
+    cells = region.get_cells(true_cells_only=region.kind == 'cell')
+    conn = cmesh.get_incident(0, cells, region.kind_tdim)
     conn.shape = (econn.shape[0], -1)
 
     ecoors = nm.dot(bf, mesh_coors[conn])
