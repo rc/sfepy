@@ -1610,6 +1610,12 @@ class Term(Struct):
         extra = None
         rdct = self.get_dof_conn_type(vvar.name)
 
+        if hasattr(self, 'debug') and (self.debug > 1):
+            output(self.name, self.arg_names)
+            output(mode, diff_var)
+            from sfepy.base.base import debug
+            debug()
+
         if mode == 'vector':
             if asm_obj.dtype == nm.float64:
                 assemble = asm.assemble_vector
