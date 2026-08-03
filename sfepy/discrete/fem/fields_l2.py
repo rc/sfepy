@@ -4,8 +4,9 @@ from sfepy.base.base import Struct
 from sfepy.discrete.common.fields import parse_shape, Field
 from sfepy.discrete import PolySpace
 from sfepy.discrete.fem.mappings import FEMapping
-from sfepy.discrete.fem.fields_base import _find_geometry
-#from sfepy.discrete.fem.utils import get_min_value
+from sfepy.discrete.fem.fields_base import (
+    _find_geometry, _get_sgeom_poly_space, FEField,
+)
 from sfepy.discrete.fem.meshio import convert_complex_output
 
 class L2ConstantVolumeField(Field):
@@ -47,16 +48,7 @@ class L2ConstantVolumeField(Field):
         gkey = self.gel.get_interpolation_name()
         self.geom_poly_space = self.domain.geom_poly_spaces[gkey]
         if not self.is_surface:
-            gps = self.domain.geom_poly_spaces
-            surface_facet = self.gel.surface_facet
-            if isinstance(surface_facet, dict):
-                self.sgeom_poly_space = {}
-                for k, v in surface_facet.items():
-                    gkey = v.get_interpolation_name()
-                    self.sgeom_poly_space[k] = gps[gkey]
-            else:
-                gkey = surface_facet.get_interpolation_name()
-                self.sgeom_poly_space = gps[gkey]
+            self.sgeom_poly_space = _get_sgeom_poly_space(self.domain, self.gel)
 
         self._setup_kind()
         self._create_interpolant()

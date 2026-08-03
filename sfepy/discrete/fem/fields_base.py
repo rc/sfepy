@@ -59,6 +59,20 @@ def _find_geometry(region):
 
     return gel, is_surface
 
+def _get_sgeom_poly_space(domain, gel):
+    gps = domain.geom_poly_spaces
+    surface_facet = gel.surface_facet
+    if isinstance(surface_facet, dict):
+        sgeom_poly_space = {}
+        for k, v in surface_facet.items():
+            gkey = v.get_interpolation_name()
+            sgeom_poly_space[k] = gps[gkey]
+    else:
+        gkey = surface_facet.get_interpolation_name()
+        sgeom_poly_space = gps[gkey]
+
+    return sgeom_poly_space
+
 def set_mesh_coors(domain, fields, coors, update_fields=False, actual=False,
                    clear_all=True, extra_dofs=False):
     if actual:
@@ -286,15 +300,7 @@ class FEField(Field):
         gkey = self.gel.get_interpolation_name()
         self.geom_poly_space = gps[gkey]
         if not self.is_surface:
-            surface_facet = self.gel.surface_facet
-            if isinstance(surface_facet, dict):
-                self.sgeom_poly_space = {}
-                for k, v in surface_facet.items():
-                    gkey = v.get_interpolation_name()
-                    self.sgeom_poly_space[k] = gps[gkey]
-            else:
-                gkey = surface_facet.get_interpolation_name()
-                self.sgeom_poly_space = gps[gkey]
+            self.sgeom_poly_space = _get_sgeom_poly_space(self.domain, self.gel)
 
         self._setup_kind()
         self._setup_shape()
