@@ -344,6 +344,33 @@ class CorrEval(CorrMiniApp):
         return corr_sol
 
 
+class CorrApplyFunction(CorrMiniApp):
+    """
+    Apply a user function to components of the requirements that correspond to
+    each other.
+    """
+
+    def __call__(self, problem=None, data=None):
+        problem = get_default(problem, self.problem)
+
+        corr_sol = data[self.requires[0]].copy(deep=True)
+
+        for indx in corr_sol.components:
+            sol = corr_sol.states[indx]
+            for var_name in sol.keys():
+                args = []
+                for req in self.requires:
+                    op = data[req].states[indx][var_name]
+                    args.append(op)
+
+                sol[var_name][:] = self.function(*args)
+
+        self.save(corr_sol, problem,
+                  variables=problem.create_variables(self.variables))
+
+        return corr_sol
+
+
 class CorrNN(CorrMiniApp):
     """ __init__() kwargs:
         {
