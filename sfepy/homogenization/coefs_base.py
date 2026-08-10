@@ -752,6 +752,24 @@ class CoefSymDim(CoefMN):
 
         return self.get_coef(row, col, volume, problem, data)
 
+class CoefDimNonSym(CoefMN):
+    def __call__(self, volume, problem=None, data=None):
+        problem = get_default(problem, self.problem)
+        dim = problem.get_dim()
+        row = [(ii, None) for ii in range(dim)]
+        col = [ii for ii in iter_nonsym(dim)]
+
+        return self.get_coef(row, col, volume, problem, data)
+
+class CoefNonSymDim(CoefMN):
+    def __call__(self, volume, problem=None, data=None):
+        problem = get_default(problem, self.problem)
+        dim = problem.get_dim()
+        row = [ii for ii in iter_nonsym(dim)]
+        col = [(ii, None) for ii in range(dim)]
+
+        return self.get_coef(row, col, volume, problem, data)
+
 class CoefN(CoefMN):
     @staticmethod
     def set_variables_default(variables, ir, ic, mode, set_var, data, dtype):
