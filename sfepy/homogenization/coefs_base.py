@@ -344,6 +344,50 @@ class CorrEval(CorrMiniApp):
         return corr_sol
 
 
+class CorrApplyFunction(CorrMiniApp):
+    """
+    Apply a user function to components of the requirements that correspond to
+    each other.
+
+    Examples
+    --------
+    Sum correponding components of three correctors::
+
+        requirements = {
+            ...
+            'corrs_sum': {
+                'requires': ['corrs1', 'corrs2, corrs3],
+                'function': lambda a, b, c: a + b + c,
+                'class': CorrApplyFunction,
+                'save_name': 'corrs_sum',
+            },
+            ...
+        }
+    """
+
+    def __call__(self, problem=None, data=None):
+        problem = get_default(problem, self.problem)
+
+        corr_sol = data[self.requires[0]].copy(deep=True)
+
+        var_names = set()
+        for indx in corr_sol.components:
+            sol = corr_sol.states[indx]
+            for var_name in sol.keys():
+                args = []
+                for req in self.requires:
+                    op = data[req].states[indx][var_name]
+                    args.append(op)
+
+                sol[var_name][:] = self.function(*args)
+                var_names.update(var_name)
+
+        self.save(corr_sol, problem,
+                  variables=problem.create_variables(var_names))
+
+        return corr_sol
+
+
 class CorrNN(CorrMiniApp):
     """ __init__() kwargs:
         {
