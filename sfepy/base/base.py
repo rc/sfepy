@@ -15,11 +15,6 @@ complex_types = [nm.complex128]
 
 nm.set_printoptions(threshold=100)
 
-sfepy_config_dir = os.path.expanduser('~/.sfepy')
-if not os.path.exists(sfepy_config_dir):
-    os.makedirs(sfepy_config_dir)
-
-
 def debug(frame=None, frames_back=1):
     """
     Start debugger on line where it is called, roughly equivalent to::

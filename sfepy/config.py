@@ -4,6 +4,10 @@ import shutil
 import sysconfig
 from warnings import warn
 
+sfepy_config_dir = os.path.expanduser('~/.sfepy')
+if not os.path.exists(sfepy_config_dir):
+    os.makedirs(sfepy_config_dir)
+
 def get_top_dir():
     """
     Return SfePy installation directory information.
@@ -61,7 +65,6 @@ class Config:
 
     def __init__(self):
         from importlib.machinery import SourceFileLoader
-        from sfepy.base.base import sfepy_config_dir
 
         cwd = os.getcwd()
         config_filename = os.path.join(cwd, 'site_cfg.py')
