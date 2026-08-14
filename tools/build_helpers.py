@@ -241,7 +241,7 @@ def package_check(pkg_name, version=None, optional=False, checker=version.parse,
     for pkg_name in names:
         try:
             __import__(pkg_name)
-        except ImportError:
+        except (ImportError, RuntimeError):
             pass
         else:
             import_ok = True

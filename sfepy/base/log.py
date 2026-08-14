@@ -10,7 +10,8 @@ except ImportError:
 
 import numpy as nm
 
-from sfepy.base.base import sfepy_config_dir, ordered_iteritems
+from sfepy import sfepy_config_dir
+from sfepy.base.base import ordered_iteritems
 from sfepy.base.base import output, get_default, set_defaults, Output, Struct
 from sfepy.base.log_plotter import draw_data, LogPlotter
 

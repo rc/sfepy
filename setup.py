@@ -88,56 +88,56 @@ def check_versions(show_only=False):
     package_check('numpy', INFO.NUMPY_MIN_VERSION,
                   show_only=show_only)
     package_check('scipy', INFO.SCIPY_MIN_VERSION,
-                  show_only=show_only)
+                  show_only=True)
     package_check('matplotlib', INFO.MATPLOTLIB_MIN_VERSION,
-                  show_only=show_only)
+                  show_only=True)
     package_check('pyparsing', INFO.PYPARSING_MIN_VERSION,
-                  show_only=show_only)
+                  show_only=True)
     package_check('tables', INFO.PYTABLES_MIN_VERSION,
-                  show_only=show_only)
+                  show_only=True)
     package_check('sympy', INFO.SYMPY_MIN_VERSION, optional=True,
                   messages={'opt suffix' : '; some tests are going to fail!'},
-                  show_only=show_only)
+                  show_only=True)
     package_check('igakit', INFO.IGAKIT_MIN_VERSION, optional=True,
                   version_getter=_igakit_version,
-                  show_only=show_only)
+                  show_only=True)
     package_check('petsc4py', INFO.PETSC4PY_MIN_VERSION, optional=True,
-                  show_only=show_only)
+                  show_only=True)
     package_check('mpi4py', INFO.MPI4PY_MIN_VERSION, optional=True,
-                  show_only=show_only)
+                  show_only=True)
     package_check('slepc4py', INFO.SLEPC4PY_MIN_VERSION, optional=True,
-                  show_only=show_only)
+                  show_only=True)
     package_check('pymetis', INFO.PYMETIS_MIN_VERSION, optional=True,
                   version_getter=_pymetis_version,
-                  show_only=show_only)
+                  show_only=True)
     package_check('scikits.umfpack', INFO.SCIKIT_UMFPACK_MIN_VERSION,
                   optional=True,
                   version_getter=_scikit_umfpack_version,
-                  show_only=show_only)
+                  show_only=True)
     package_check('meshio', INFO.MESHIO_MIN_VERSION,
-                  show_only=show_only)
+                  show_only=True)
     package_check('psutil', INFO.PSUTIL_MIN_VERSION, optional=True,
-                  show_only=show_only)
+                  show_only=True)
     package_check('pyvista', INFO.PYVISTA_MIN_VERSION, optional=True,
-                  show_only=show_only)
+                  show_only=True)
     package_check('opt_einsum', INFO.OPT_EINSUM_MIN_VERSION, optional=True,
-                  show_only=show_only)
+                  show_only=True)
     package_check('jax', INFO.JAX_MIN_VERSION, optional=True,
-                  show_only=show_only)
+                  show_only=True)
     package_check('dask', INFO.DASK_MIN_VERSION, optional=True,
-                  show_only=show_only)
+                  show_only=True)
     package_check('primme', INFO.PRIMME_MIN_VERSION, optional=True,
                   version_getter=_primme_version, show_only=show_only)
     package_check('oct2py', INFO.OCT2PY_MIN_VERSION, optional=True,
-                  show_only=show_only)
+                  show_only=True)
     package_check('mumpspy', INFO.MUMPSPY_MIN_VERSION, optional=True,
-                  show_only=show_only)
+                  show_only=True)
     package_check('mumps', INFO.PYTHON_MUMPS_MIN_VERSION, optional=True,
-                  show_only=show_only)
+                  show_only=True)
     package_check('ipctk', INFO.IPCTK_MIN_VERSION, optional=True,
-                  show_only=show_only)
+                  show_only=True)
     package_check('pypardiso', INFO.PYPARDISO_MIN_VERSION, optional=True,
-                  show_only=show_only)
+                  show_only=True)
 
 
 def data_dir_walk(dir_name: str, prefix: str) -> list:

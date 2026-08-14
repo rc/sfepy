@@ -1,6 +1,7 @@
-import os, glob
+import os
+import glob
 
-from .config import in_source_tree, top_dir, site_config
+from .config import sfepy_config_dir, in_source_tree, top_dir, site_config
 from .version import __version__
 
 data_dir = os.path.realpath(top_dir)
@@ -43,3 +44,8 @@ def test(*args):
         args = [path] + args
 
     return pytest.main(args=args)
+
+__all__ = [
+    sfepy_config_dir, in_source_tree, top_dir, site_config, __version__,
+    get_paths, test,
+]
