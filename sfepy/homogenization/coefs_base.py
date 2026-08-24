@@ -312,38 +312,6 @@ class OnesDim(CorrMiniApp):
         return corr_sol
 
 
-class CorrEval(CorrMiniApp):
-    def __call__(self, problem=None, data=None):
-        problem = get_default(problem, self.problem)
-        expr = self.expression
-        for req in self.requires:
-            expr = expr.replace(req, "data['%s']" % req)
-
-        val = eval(expr)
-
-
-        if type(val) is dict:
-            corr_sol = CorrSolution(name=self.name,
-                                    state=val)
-        elif type(val) is nm.ndarray:
-            if val.dtype == object:
-                corr_sol = CorrSolution(name=self.name,
-                                        states=val,
-                                        components=['data'])
-            else:
-                ndof, ndim = val.shape
-                state = {self.variable: val.reshape((ndof * ndim,))}
-                corr_sol = CorrSolution(name=self.name,
-                                        state=state)
-        else:
-            corr_sol = val
-
-        cvars = problem.create_variables([self.variable])
-        self.save(corr_sol, problem, variables=cvars)
-
-        return corr_sol
-
-
 class CorrApplyFunction(CorrMiniApp):
     """
     Apply a user function to components of the requirements that correspond to
@@ -425,6 +393,23 @@ class CorrApplyFunction(CorrMiniApp):
                   variables=problem.create_variables(var_names))
 
         return corr_sol
+
+
+class CorrEval(CorrApplyFunction):
+
+    def __call__(self, problem=None, data=None):
+        problem = get_default(problem, self.problem)
+
+        expr = self.expression
+        for req in self.requires:
+            expr = expr.replace(req, "data['%s']" % req)
+
+        def eval_fun(problem, data):
+            return eval(expr, {}, dict(problem=problem, data=data))
+
+        self.function = eval_fun
+
+        return CorrApplyFunction(self, problem=problem, data=data)
 
 
 class CorrNN(CorrMiniApp):
