@@ -349,6 +349,13 @@ class CorrApplyFunction(CorrMiniApp):
     Apply a user function to components of the requirements that correspond to
     each other.
 
+    The user function positional arguments are `problem`, `data` (see
+    :meth:`CorrApplyFunction.__call__()`) and the requirements in the order
+    specified in the `'requires'` list in the corrector configuration.
+
+    If there are no requirements, either `'variables'` or `'variable'` key must
+    be present in the corrector configuration.
+
     Examples
     --------
     Sum correponding components of three correctors::
@@ -357,7 +364,7 @@ class CorrApplyFunction(CorrMiniApp):
             ...
             'corrs_sum': {
                 'requires': ['corrs1', 'corrs2, corrs3],
-                'function': lambda a, b, c: a + b + c,
+                'function': lambda problem, data, a, b, c: a + b + c,
                 'class': CorrApplyFunction,
                 'save_name': 'corrs_sum',
             },
@@ -365,22 +372,54 @@ class CorrApplyFunction(CorrMiniApp):
         }
     """
 
+    def _convert_value(self, val):
+        if type(val) is dict:
+            corr_sol = CorrSolution(name=self.name,
+                                    state=val)
+        elif type(val) is nm.ndarray:
+            if val.dtype == object:
+                corr_sol = CorrSolution(name=self.name,
+                                        states=val,
+                                        components=['data'])
+            else:
+                ndof, ndim = val.shape
+                state = {self.variable: val.reshape((ndof * ndim,))}
+                corr_sol = CorrSolution(name=self.name,
+                                        state=state)
+        else:
+            corr_sol = val
+
+        return corr_sol
+
     def __call__(self, problem=None, data=None):
+        """
+        test
+        """
         problem = get_default(problem, self.problem)
 
-        corr_sol = data[self.requires[0]].copy(deep=True)
+        if self.requires:
+            corr_sol = data[self.requires[0]].copy(deep=True)
 
-        var_names = set()
-        for indx in corr_sol.components:
-            sol = corr_sol.states[indx]
-            for var_name in sol.keys():
-                args = []
-                for req in self.requires:
-                    op = data[req].states[indx][var_name]
-                    args.append(op)
+            var_names = set()
+            for indx in corr_sol.components:
+                sol = corr_sol.states[indx]
 
-                sol[var_name][:] = self.function(*args)
-                var_names.update(var_name)
+                for var_name in sol.keys():
+                    args = [problem, data]
+
+                    for req in self.requires:
+                        op = data[req].states[indx][var_name]
+                        args.append(op)
+
+                    sol[var_name][:] = self.function(*args)
+                    var_names.update(var_name)
+
+        else:
+            val = self.function(problem, data)
+            corr_sol = self._convert_value(val)
+
+            var_names = (self.variables if hasattr(self, 'variable')
+                         else [self.variable])
 
         self.save(corr_sol, problem,
                   variables=problem.create_variables(var_names))
