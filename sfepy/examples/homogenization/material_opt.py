@@ -41,6 +41,7 @@ class MaterialOptimizer:
             app = PDESolverApp(conf, options, 'material_opt_macro:')
 
         app.conf.opt_data = {}
+        app.problem.conf.opt_data = app.conf.opt_data
         opts = conf.options
         if hasattr(opts, 'parametric_hook'):  # Parametric study.
             parametric_hook = conf.get_function(opts.parametric_hook)
