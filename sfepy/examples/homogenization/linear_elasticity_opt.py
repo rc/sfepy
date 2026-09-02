@@ -34,12 +34,12 @@ def optimization_hook(pb):
 
     yield None
 
-def get_mat(coors, mode, pb):
+def get_mat(ts, coors, mode=None, problem=None, **kwargs):
     if mode == 'qp':
         # get material data
-        if hasattr(pb.conf, 'opt_data'):
+        if hasattr(problem.conf, 'opt_data'):
             # from homogenization
-            D = pb.conf.opt_data['D_homog']
+            D = problem.conf.opt_data['D_homog']
         else:
             # given values
             D = stiffness_from_youngpoisson(3, 150.0e9, 0.3)
@@ -58,8 +58,7 @@ def define(is_opt=False):
     }
 
     functions = {
-        'get_mat': (lambda ts, coors, mode=None, problem=None, **kwargs:
-                    get_mat(coors, mode, problem),),
+        'get_mat': (get_mat,),
     }
 
     S = 1.083500e-05    # specimen cross-section
