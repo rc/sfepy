@@ -369,14 +369,27 @@ class CorrApplyFunction(CorrMiniApp):
             corr_sol = data[self.requires[0]].copy(deep=True)
 
             var_names = set()
-            for indx in corr_sol.components:
-                sol = corr_sol.states[indx]
+            if hasattr(corr_sol, 'components'):
+                for indx in corr_sol.components:
+                    sol = corr_sol.states[indx]
 
+                    for var_name in sol.keys():
+                        args = [problem, data]
+
+                        for req in self.requires:
+                            op = data[req].states[indx][var_name]
+                            args.append(op)
+
+                        sol[var_name][:] = self.function(*args)
+                        var_names.update(var_name)
+
+            else:
+                sol = corr_sol.state
                 for var_name in sol.keys():
                     args = [problem, data]
 
                     for req in self.requires:
-                        op = data[req].states[indx][var_name]
+                        op = data[req].state[var_name]
                         args.append(op)
 
                     sol[var_name][:] = self.function(*args)
