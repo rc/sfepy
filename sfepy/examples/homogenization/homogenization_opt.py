@@ -8,9 +8,9 @@ import sfepy.homogenization.coefs_base as cb
 from sfepy import data_dir
 
 # material function
-def get_mat(coors, mode, pb):
+def get_mat(ts, coors, mode=None, problem=None, **kwargs):
     if mode == 'qp':
-        cnf = pb.conf
+        cnf = problem.conf
         # get material coefficients
         if hasattr(cnf, 'opt_data'):
             # from optim.
@@ -20,13 +20,13 @@ def get_mat(coors, mode, pb):
             E_f, nu_f, E_m, nu_m  = 160.e9, 0.28, 5.e9, 0.45
 
         nqp = coors.shape[0]
-        nel = pb.domain.mesh.n_el
+        nel = problem.domain.mesh.n_el
         nqpe = nqp // nel
         out = nm.zeros((nqp, 6, 6), dtype=nm.float64)
 
         # set values - matrix
         D_m = stiffness_from_youngpoisson(3, E_m, nu_m)
-        Ym = pb.domain.regions['Ym'].get_cells()
+        Ym = problem.domain.regions['Ym'].get_cells()
         idx0 = (nm.arange(nqpe)[:,nm.newaxis] * nm.ones((1, Ym.shape[0]),
                     dtype=nm.int32)).T.flatten()
         idxs = (Ym[:,nm.newaxis] * nm.ones((1, nqpe),
@@ -35,7 +35,7 @@ def get_mat(coors, mode, pb):
 
         # set values - fiber
         D_f = stiffness_from_youngpoisson(3, E_f, nu_f)
-        Yf = pb.domain.regions['Yf'].get_cells()
+        Yf = problem.domain.regions['Yf'].get_cells()
         idx0 = (nm.arange(nqpe)[:,nm.newaxis] * nm.ones((1, Yf.shape[0]),
                     dtype=nm.int32)).T.flatten()
         idxs = (Yf[:,nm.newaxis] * nm.ones((1, nqpe),
@@ -44,14 +44,14 @@ def get_mat(coors, mode, pb):
 
         return {'D': out}
 
-def optimization_hook(pb):
-    cnf = pb.conf
+def optimization_hook(problem):
+    cnf = problem.conf
     out = []
-    yield pb, out
+    yield problem, out
 
     if hasattr(cnf, 'opt_data'):
         # store homogenized tensor
-        pb.conf.opt_data['D_homog'] = out[-1].D.copy()
+        problem.conf.opt_data['D_homog'] = out[-1].D.copy()
 
     yield None
 
@@ -70,8 +70,7 @@ def define(is_opt=False):
     regions.update(define_box_regions(3, bbox[0], bbox[1]))
 
     functions = {
-        'get_mat': (lambda ts, coors, mode=None, problem=None, **kwargs:
-                    get_mat(coors, mode, problem),),
+        'get_mat': (get_mat,),
         'match_x_plane' : (per.match_x_plane,),
         'match_y_plane' : (per.match_y_plane,),
         'match_z_plane' : (per.match_z_plane,),
