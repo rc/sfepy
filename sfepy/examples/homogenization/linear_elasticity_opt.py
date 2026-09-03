@@ -15,13 +15,13 @@ def mesh_hook(mesh, mode):
     elif mode == 'write':
         pass
 
-def optimization_hook(pb):
-    cnf = pb.conf
+def optimization_hook(problem):
+    cnf = problem.conf
     out = []
-    yield pb, out
+    yield problem, out
 
     state = out[-1][1].get_state_parts()
-    coors = pb.domain.cmesh.coors
+    coors = problem.domain.cmesh.coors
     displ = state['u'].reshape((coors.shape[0],3))
     # elongation
     mcoors = coors[cnf.mnodes, 2]

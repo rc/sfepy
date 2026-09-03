@@ -44,14 +44,14 @@ def get_mat(ts, coors, mode=None, problem=None, **kwargs):
 
         return {'D': out}
 
-def optimization_hook(pb):
-    cnf = pb.conf
+def optimization_hook(problem):
+    cnf = problem.conf
     out = []
-    yield pb, out
+    yield problem, out
 
     if hasattr(cnf, 'opt_data'):
         # store homogenized tensor
-        pb.conf.opt_data['D_homog'] = out[-1].D.copy()
+        problem.conf.opt_data['D_homog'] = out[-1].D.copy()
 
     yield None
 
