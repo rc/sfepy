@@ -11,8 +11,6 @@ from sfepy.base.base import OneTypeList, Container, Struct
 from sfepy.base.timing import Timer
 from sfepy.linalg.utils import chunk_arrays, cycle
 from sfepy.discrete import Materials, Variables, create_adof_conns
-from sfepy.terms import Terms, Term
-from sfepy.terms.terms_multilinear import ETermBase
 
 def parse_definition(equation_def):
     """
@@ -213,6 +211,7 @@ class Equations(Container):
             The sub-equations.
         """
         from sfepy.discrete import FieldVariable
+        from sfepy.terms import Terms
 
         known_var_names = get_default(known_var_names, [])
 
@@ -989,6 +988,9 @@ class Equation(Struct):
     @staticmethod
     def from_desc(name, desc, variables, regions, materials, integrals,
                   user=None, eterm_options=None, allow_derivatives=False):
+        from sfepy.terms import Terms
+        from sfepy.terms.terms_multilinear import ETermBase
+
         term_descs = parse_definition(desc)
         terms = Terms.from_desc(term_descs, regions, integrals)
 
@@ -1006,6 +1008,8 @@ class Equation(Struct):
         return obj
 
     def __init__(self, name, terms, setup=True):
+        from sfepy.terms import Terms, Term
+
         Struct.__init__(self, name=name)
 
         if isinstance(terms, Term): # A single term.
