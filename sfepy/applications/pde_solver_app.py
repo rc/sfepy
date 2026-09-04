@@ -219,7 +219,7 @@ class PDESolverApp(Application):
             save_only(self.conf, self.save_names, problem=problem)
 
         if options.solve_not:
-            return None, None, None
+            return problem, None
 
         state = problem.solve(
             status=status, save_results=self.app_options.save_results,
