@@ -198,17 +198,21 @@ class PDESolverApp(Application):
 
         ofn_trunk = self.problem.ofn_trunk
         inodir = partial(os.path.join, self.problem.output_dir)
-        self.save_names = Struct(ebc=inodir(ofn_trunk + '_ebc.vtk')
-                                 if options.save_ebc else None,
 
-                                 ebc_nodes=inodir(ofn_trunk + '_ebc_nodes.vtk')
-                                 if options.save_ebc_nodes else None,
+        optdict = vars(options)
+        self.save_names = Struct(
+            ebc=inodir(ofn_trunk + '_ebc.vtk')
+            if optdict.get('save_ebc', False) else None,
 
-                                 regions=inodir(ofn_trunk + '_region')
-                                 if options.save_regions else None,
+            ebc_nodes=inodir(ofn_trunk + '_ebc_nodes.vtk')
+            if optdict.get('save_ebc_nodes', False) else None,
 
-                                 regions_as_groups=inodir(ofn_trunk + '_regions')
-                                 if options.save_regions_as_groups else None)
+            regions=inodir(ofn_trunk + '_region')
+            if optdict.get('save_regions', False) else None,
+
+            regions_as_groups=inodir(ofn_trunk + '_regions')
+            if optdict.get('save_regions_as_groups', False) else None,
+        )
 
     def apply_saves(self):
         if any(self.save_names.to_dict().values()):
